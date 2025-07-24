@@ -1,1 +1,1 @@
-# java для тестировщиков
+# java_for_testers
