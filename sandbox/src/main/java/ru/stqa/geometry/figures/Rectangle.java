@@ -2,12 +2,16 @@ package ru.stqa.geometry.figures;
 
 public record Rectangle(double a, double b) {
 
-    public static void printRectangleArea(double a, double b) {
-        var text = String.format("Площадь прямоугольника  со сторонами %f и %f = %f", a, b,  reactangleArea(a,b));
+    public static void printRectangleArea(Rectangle r) {
+        var text = String.format("Площадь прямоугольника  со сторонами %f и %f = %f", r.a(), r.b(),  r.area());
         System.out.println(text);
     }
 
-    private static double reactangleArea(double a, double b) {
+    public double area() {
         return a * b;
+    }
+
+    public double perimeter() {
+        return 2 * (a + b);
     }
 }

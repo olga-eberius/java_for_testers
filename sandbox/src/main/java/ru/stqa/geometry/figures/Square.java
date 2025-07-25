@@ -9,10 +9,10 @@ public record Square(double side){
 
 
     public double area() {
-        return this.side * this.side;
+        return side * side;
     }
 
     public double perimeter() {
-        return 4 * this.side;
+        return 4 * side;
     }
 }
