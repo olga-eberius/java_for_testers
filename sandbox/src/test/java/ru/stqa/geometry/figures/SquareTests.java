@@ -17,3 +17,4 @@ public class SquareTests {
         Assertions.assertEquals(20.0, new Square(5.0).perimeter());
     }
 }
+
