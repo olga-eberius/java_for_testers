@@ -74,5 +74,61 @@ public class TriangleTests {
         }
     }
 
+    //Проверка равенства одинаковых треугольников, a=a, b=b, c=c
+    @Test
+    void testEquality(){
+        var t1 = new Triangle (5.0, 4.0, 3.0);
+        var t2 = new Triangle (5.0, 4.0, 3.0);
+        Assertions.assertTrue(t1.equals(t2));
+    }
+
+    //Проверка равенства треугольников, где a=a, b=c, c=b
+    @Test
+    void testEquality2(){
+        var t1 = new Triangle (5.0, 4.0, 3.0);
+        var t2 = new Triangle (5.0, 3.0, 4.0);
+        Assertions.assertTrue(t1.equals(t2));
+    }
+
+    //Проверка равенства треугольников, где a=b, b=a, c=c
+    @Test
+    void testEquality3(){
+        var t1 = new Triangle (5.0, 4.0, 3.0);
+        var t2 = new Triangle (4.0, 5.0, 3.0);
+        Assertions.assertTrue(t1.equals(t2));
+    }
+
+    //Проверка равенства треугольников, где a=b, b=c, c=a
+    @Test
+    void testEquality4(){
+        var t1 = new Triangle (5.0, 4.0, 3.0);
+        var t2 = new Triangle (4.0, 3.0, 5.0);
+        Assertions.assertTrue(t1.equals(t2));
+    }
+
+    //Проверка равенства треугольников, где a=c, b=a, c=b
+    @Test
+    void testEquality5(){
+        var t1 = new Triangle (5.0, 4.0, 3.0);
+        var t2 = new Triangle (3.0, 5.0, 4.0);
+        Assertions.assertTrue(t1.equals(t2));
+    }
+
+    //Проверка равенства треугольников, где a=c, b=b, c=a
+    @Test
+    void testEquality6(){
+        var t1 = new Triangle (5.0, 4.0, 3.0);
+        var t2 = new Triangle (3.0, 4.0, 5.0);
+        Assertions.assertTrue(t1.equals(t2));
+    }
+
+    //Проверка неравенства треугольников
+    @Test
+    void testNotEquality(){
+        var t1 = new Triangle (5.0, 4.0, 3.0);
+        var t2 = new Triangle (5.0, 4.0, 5.0);
+        Assertions.assertFalse(t1.equals(t2));
+    }
+
 }
 
