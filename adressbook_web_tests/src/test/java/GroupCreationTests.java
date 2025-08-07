@@ -1,6 +1,7 @@
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
 
+//Создание группы
 public class GroupCreationTests extends TestBase{
 
     @Test

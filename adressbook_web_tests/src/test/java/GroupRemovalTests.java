@@ -1,5 +1,6 @@
 import org.junit.jupiter.api.Test;
 
+//Удаление группы
 public class GroupRemovalTests extends TestBase{
 
     @Test
