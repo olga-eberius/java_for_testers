@@ -5,7 +5,6 @@
     <option name="linkedExternalProjectsSettings">
       <GradleProjectSettings>
         <option name="externalProjectPath" value="$PROJECT_DIR$/adressbook_web_tests" />
-        <option name="gradleHome" value="" />
         <option name="gradleJvm" value="zulu-21" />
         <option name="modules">
           <set>
