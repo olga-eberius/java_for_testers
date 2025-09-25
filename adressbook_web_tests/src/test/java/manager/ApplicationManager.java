@@ -14,8 +14,10 @@ public class ApplicationManager {
     protected WebDriver driver;
     //всполмогательный класс для управления авторизацией
     private LoginHelper session;
-    //всполмогательный класс для управления группами
+    //вспомогательный класс для управления группами
     private GroupHelper groups;
+    //вспомогательный класс для управления контактами
+    private ContactsHelper contacts;
 
     public void init(String browser) {
         if (driver == null) {//если драйвер не инициализирован
@@ -23,8 +25,9 @@ public class ApplicationManager {
                 driver = new FirefoxDriver();  //создаем новый FirefoxDriver
             } else if ("chrome".equals(browser)){
                 WebDriverManager.chromedriver().setup();
-                driver = new ChromeDriver();
+                driver = new ChromeDriver(); //создание драйвера для Chrome
             } else {
+                //выброс исключения для неизвестного браузера
                 throw new IllegalArgumentException(String.format("Unknow browser %s", browser));
             }
             Runtime.getRuntime().addShutdownHook(new Thread(driver::quit));  //хук для закрытия
@@ -35,6 +38,7 @@ public class ApplicationManager {
         }
     }
 
+    //получение экземпляра помощника для работы с авторизацией
     public LoginHelper session(){
         if (session == null) {
             session = new LoginHelper(this);
@@ -42,11 +46,20 @@ public class ApplicationManager {
         return session;
     }
 
+    //получение экземпляра помощника для работы с группами
     public GroupHelper groups() {
         if (groups == null) {
             groups = new GroupHelper(this);
         }
         return groups;
+    }
+
+    //получение экземпляра помощника для работы с контактами
+    public ContactsHelper contacts() {
+        if (contacts == null) {
+            contacts = new ContactsHelper(this);
+        }
+        return contacts;
     }
 
     //проверка наличия элемента на странице

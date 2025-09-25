@@ -14,12 +14,7 @@ public class GroupHelper extends HelperBase{
         super(manager);
     }
 
-    /*//открытие страницы Group
-    public void openGroupsPage() {
-        if (!manager.isElementPresent(By.name("new"))) {
-            manager.driver.findElement(By.linkText("groups")).click();
-        }
-    }*/
+
     //вариант временный с ожиданием
     public void openGroupsPage() {
         WebDriverWait wait = new WebDriverWait(manager.driver, Duration.ofSeconds(10));
@@ -35,11 +30,7 @@ public class GroupHelper extends HelperBase{
         // Если уже на странице, просто выходим из метода
     }
 
-    //проверка наличия группы
-    public boolean isGroupPresent() {
-        openGroupsPage();
-        return manager.isElementPresent(By.name("selected[]"));
-    }
+
 
     //метод для создания новой группы
     public void createGroup(GroupData group) {
@@ -91,7 +82,9 @@ public class GroupHelper extends HelperBase{
     }
 
     private void returnToGroupsPage() {
-        click(By.linkText("group page"));
+        if (isElementPresent(By.linkText("group page"))) {        //проверка наличия элемента перед кликом
+            click(By.linkText("group page"));
+        }
     }
 
     private void submitGroupModification() {
@@ -108,4 +101,21 @@ public class GroupHelper extends HelperBase{
         click(By.name("selected[]"));
     }
 
+    public int getCount() {
+        openGroupsPage();
+        return manager.driver.findElements(By.name("selected[]")).size();
+    }
+
+    public void removeAllGroups() {
+        openGroupsPage();
+        selectAllGroups();
+        removeSelectedGroup();
+    }
+
+    private void selectAllGroups() {
+        var checkboxes = manager.driver.findElements(By.name("selected[]"));
+        for (var checkbox: checkboxes) {
+            checkbox.click();
+        }
+    }
 }
