@@ -6,14 +6,16 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
-//Создание группы
+// Создание групп
 public class GroupCreationTests extends TestBase{
 
-
+    // создание тестовых данных для позитивных сценариев
     public static List<GroupData> groupProvider() {
         var result = new ArrayList<GroupData>();
+        // с пустыми и непустыми значениями
         for (var name: List.of("","group name")){
             for (var header: List.of("","group header")) {
                 for (var footer: List.of("", "group header")) {
@@ -24,6 +26,7 @@ public class GroupCreationTests extends TestBase{
                 }
             }
         }
+        // со случайными данными разной длины
         for(int i = 0; i < 5; i++) {
             result.add(new GroupData()
                     .withName(randomString(i * 10))
@@ -33,60 +36,50 @@ public class GroupCreationTests extends TestBase{
         return result;
     }
 
+    // тестовые данные негативных сценариев
     public static List<GroupData> negativeGroupProvider() {
         var result = new ArrayList<GroupData>(List.of(
                 new GroupData("", "group name'", "", "")));
         return result;
     }
 
-  /*  //проверка создания группы со всеми заполненными полями
-    @ParameterizedTest
-    @ValueSource(strings={"group name", "group name'"})
-    public void canCreateGroup(String name) {
-        int groupCount = app.groups().getCount();
-        app.groups().createGroup(new GroupData(name, "group header", "group footer"));
-        int newGroupCount = app.groups().getCount();
-        Assertions.assertEquals(groupCount + 1, newGroupCount);
-    }*/
-
-
-  /* //проверка создания группы с пустым именем
-    @Test
-    public void canCreateGroupWithEmptyName() {
-        app.groups().createGroup(new GroupData());
-
-    }*/
-
-    /*//проверка создания группы только с заполненным именем
-    @Test
-    public void canCreateGroupWithNameOnly() {
-        //создание группы сразу с именем
-        app.groups().createGroup(new GroupData().withName("some name"));
-
-    }*/
-
-    //проверка создания групп
+    // Проверка создания групп с различными валидными данными
     @ParameterizedTest
     @MethodSource("groupProvider")
     public void canCreateMultipleGroups(GroupData group) {
+        // получение списка групп до создания
+        var oldGroups = app.groups().getList();
         int groupCount = app.groups().getCount();
-
+        // создание новой группы
         app.groups().createGroup(group);
+        // получение списка групп после создания
+        var newGroups = app.groups().getList();
+        // компаратор для сортировки групп по ID
+        Comparator<GroupData> compareById = (o1, o2) -> {
+            return Integer.compare(Integer.parseInt(o1.id()), Integer.parseInt(o2.id()));
+        };
+        newGroups.sort(compareById);
 
-        int newGroupCount = app.groups().getCount();
-        Assertions.assertEquals(groupCount + 1, newGroupCount);
+        // формирование ожидаемого списка групп
+        var expectedList = new ArrayList<>(oldGroups);
+        expectedList.add(group.withId(newGroups.get(newGroups.size() - 1).id()).withHeader("").withFooter(""));
+        expectedList.sort(compareById);
+        // сравнение списков групп
+        Assertions.assertEquals(newGroups, expectedList);
     }
 
-    //проверка создания заданного числа групп
+    // проверка невозможности создания группы с невалидными данными
     @ParameterizedTest
     @MethodSource("negativeGroupProvider")
     public void canNotCreateGroup(GroupData group) {
-        int groupCount = app.groups().getCount();
+        // получение списка групп до попытки создания
+        var oldGroups = app.groups().getList();
+        // попытка создания группы с невалидными данными
         app.groups().createGroup(group);
-        int newGroupCount = app.groups().getCount();
-        Assertions.assertEquals(groupCount, newGroupCount);
+        // получение списка групп после попытки создания
+        var newGroups = app.groups().getList();
+        // сравнение списков групп (группа не создана)
+        Assertions.assertEquals(newGroups, oldGroups);
     }
-
-
 }
 
