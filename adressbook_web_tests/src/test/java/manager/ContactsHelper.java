@@ -2,9 +2,9 @@ package manager;
 
 import model.ContactData;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,26 +19,18 @@ public class ContactsHelper extends HelperBase {
     public void openContactsPage() {
         WebDriverWait wait = new WebDriverWait(manager.driver, Duration.ofSeconds(10));
 
-        // проверяем, не находимся ли мы уже на странице контактов
         if (!manager.isElementPresent(By.name("searchstring"))) {
-            // если не на странице, ждем кликабельности ссылки и кликаем
             wait.until(ExpectedConditions.elementToBeClickable(By.linkText("home"))).click();
-
-            // ждем загрузки страницы контактов (появления элемента "searchstring")
             wait.until(ExpectedConditions.presenceOfElementLocated(By.name("searchstring")));
         }
-        // если уже на странице, просто выходим из метода
     }
 
-    // метод для создания контакта с улучшенной логикой
+    // метод для создания контакта
     public void createContact(ContactData contact) {
         openContactsPage();
-        // добавлена пауза для загрузки
         WebDriverWait wait = new WebDriverWait(manager.driver, Duration.ofSeconds(5));
 
         initContactCreation();
-
-        // ждем появления формы создания контакта
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("firstname")));
         fillContactForm(contact);
         submitContactCreation();
@@ -53,17 +45,17 @@ public class ContactsHelper extends HelperBase {
         returnToContactsPage();
     }
 
-    // изменение контакта
+    // метод для модификации контакта
     public void modifyContact(ContactData contact, ContactData modifiedContact) {
         openContactsPage();
         selectContact(contact);
-        initContactModification();
+        initContactModification(contact);
         fillContactForm(modifiedContact);
         submitContactModification();
         returnToContactsPage();
     }
 
-    // удаление всех контактов
+    // метод для удаления всех контактов
     public void removeAllContacts() {
         openContactsPage();
         selectAllContacts();
@@ -76,50 +68,52 @@ public class ContactsHelper extends HelperBase {
         return manager.driver.findElements(By.name("selected[]")).size();
     }
 
-    // метод для получения списка всех контактов (только id, имя и фамилия)
+    // метод для получения списка всех контактов
     public List<ContactData> getList() {
-        // открываем страницу со списком контактов
         openContactsPage();
-        // создаем пустой список для хранения данных контактов
         var contacts = new ArrayList<ContactData>();
-        // находим все строки таблицы с контактами
+
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
         var rows = manager.driver.findElements(By.name("entry"));
 
-        // обрабатываем каждую найденную строку контакта
         for (var row : rows) {
-            // находим ячейки в текущей строке
             var cells = row.findElements(By.tagName("td"));
-            // извлекаем ID контакта из чекбокса
-            var id = cells.get(0).findElement(By.name("selected[]")).getAttribute("value");
-            // извлекаем фамилию из второй ячейки
-            var lastName = cells.get(1).getText();
-            // извлекаем имя из третьей ячейки
-            var firstName = cells.get(2).getText();
+            if (cells.size() >= 3) {
+                try {
+                    var checkbox = cells.get(0).findElement(By.name("selected[]"));
+                    var id = checkbox.getAttribute("value");
+                    var lastName = cells.get(1).getText();
+                    var firstName = cells.get(2).getText();
 
-            // проверка что id не пустой
-            if (id != null && !id.isEmpty()) {
-                // создаем объект ContactData с id, именем и фамилией
-                contacts.add(new ContactData()
-                        .withId(id)
-                        .withFirstName(firstName)
-                        .withLastName(lastName));
+                    if (id != null && !id.isEmpty()) {
+                        contacts.add(new ContactData()
+                                .withId(id)
+                                .withFirstName(firstName)
+                                .withLastName(lastName));
+                    }
+                } catch (Exception e) {
+                    // пропускаем строку при ошибке обработки
+                }
             }
         }
-        // возвращаем список всех найденных контактов
         return contacts;
     }
 
-    // метод для инициализации создания контакта
     private void initContactCreation() {
         click(By.linkText("add new"));
     }
 
-    // метод для инициализации модификации контакта
-    private void initContactModification() {
-        click(By.xpath("//img[@title='Edit']"));
+    private void initContactModification(ContactData contact) {
+        var xpath = String.format("//tr[.//input[@value='%s']]//img[@alt='Edit']", contact.id());
+        var editButton = manager.driver.findElement(By.xpath(xpath));
+        editButton.click();
     }
 
-    // метод для заполнения формы контакта
     private void fillContactForm(ContactData contact) {
         type(By.name("firstname"), contact.firstName());
         type(By.name("middlename"), contact.middleName());
@@ -140,7 +134,6 @@ public class ContactsHelper extends HelperBase {
         type(By.name("email3"), contact.email3());
         type(By.name("homepage"), contact.homepage());
 
-        // заполняем выпадающие списки только если значения не пустые и не равны значению по умолчанию "-"
         if (contact.birthdayDay() != null && !contact.birthdayDay().isEmpty() && !contact.birthdayDay().equals("-")) {
             select(By.name("bday"), contact.birthdayDay());
         }
@@ -158,30 +151,26 @@ public class ContactsHelper extends HelperBase {
         type(By.name("ayear"), contact.anniversaryYear());
     }
 
-    // создание контакта
     private void submitContactCreation() {
         click(By.name("submit"));
     }
 
-    // метод для подтверждения модификации контакта
     private void submitContactModification() {
         click(By.name("update"));
     }
 
-    // возврат на страницу контактов
     private void returnToContactsPage() {
         if (isElementPresent(By.linkText("home"))) {
             click(By.linkText("home"));
         }
     }
 
-    // выбор контакта по ID
     private void selectContact(ContactData contact) {
-        click(By.cssSelector(String.format("input[value='%s']", contact.id())));
+        var xpath = String.format("//tr[.//input[@value='%s']]//input[@name='selected[]']", contact.id());
+        var checkbox = manager.driver.findElement(By.xpath(xpath));
+        ((JavascriptExecutor) manager.driver).executeScript("arguments[0].click();", checkbox);
     }
 
-
-    // выбор всех контактов
     private void selectAllContacts() {
         var checkboxes = manager.driver.findElements(By.name("selected[]"));
         for (var checkbox : checkboxes) {
@@ -189,33 +178,26 @@ public class ContactsHelper extends HelperBase {
         }
     }
 
-    // удаление выбранных контактов
     private void deleteSelectedContacts() {
         click(By.xpath("//input[@value='Delete']"));
 
-        // Ожидаем подтверждения удаления (alert) и принимаем его
         try {
             WebDriverWait wait = new WebDriverWait(manager.driver, Duration.ofSeconds(5));
             wait.until(ExpectedConditions.alertIsPresent());
             manager.driver.switchTo().alert().accept();
-
-            // Ждем завершения удаления
             wait.until(ExpectedConditions.or(
                     ExpectedConditions.presenceOfElementLocated(By.cssSelector("div.msgbox")),
                     ExpectedConditions.presenceOfElementLocated(By.name("searchstring"))
             ));
         } catch (Exception e) {
-            // Если алерт не появился, продолжаем выполнение
+            // продолжение выполнения если алерт не появился
         }
 
         waitForContactsList();
     }
 
-    // ожидание загрузки списка контактов
     private void waitForContactsList() {
         new WebDriverWait(manager.driver, Duration.ofSeconds(5))
                 .until(ExpectedConditions.presenceOfElementLocated(By.name("searchstring")));
     }
-
-
 }
