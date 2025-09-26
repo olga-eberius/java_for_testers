@@ -6,6 +6,8 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ContactsHelper extends HelperBase {
 
@@ -44,17 +46,17 @@ public class ContactsHelper extends HelperBase {
     }
 
     // метод для удаления контакта
-    public void removeContact() {
+    public void removeContact(ContactData contact) {
         openContactsPage();
-        selectFirstContact();
+        selectContact(contact);
         deleteSelectedContacts();
         returnToContactsPage();
     }
 
     // изменение контакта
-    public void modifyContact(ContactData modifiedContact) {
+    public void modifyContact(ContactData contact, ContactData modifiedContact) {
         openContactsPage();
-        selectFirstContact();
+        selectContact(contact);
         initContactModification();
         fillContactForm(modifiedContact);
         submitContactModification();
@@ -72,6 +74,39 @@ public class ContactsHelper extends HelperBase {
     public int getCount() {
         openContactsPage();
         return manager.driver.findElements(By.name("selected[]")).size();
+    }
+
+    // метод для получения списка всех контактов (только id, имя и фамилия)
+    public List<ContactData> getList() {
+        // открываем страницу со списком контактов
+        openContactsPage();
+        // создаем пустой список для хранения данных контактов
+        var contacts = new ArrayList<ContactData>();
+        // находим все строки таблицы с контактами
+        var rows = manager.driver.findElements(By.name("entry"));
+
+        // обрабатываем каждую найденную строку контакта
+        for (var row : rows) {
+            // находим ячейки в текущей строке
+            var cells = row.findElements(By.tagName("td"));
+            // извлекаем ID контакта из чекбокса
+            var id = cells.get(0).findElement(By.name("selected[]")).getAttribute("value");
+            // извлекаем фамилию из второй ячейки
+            var lastName = cells.get(1).getText();
+            // извлекаем имя из третьей ячейки
+            var firstName = cells.get(2).getText();
+
+            // проверка что id не пустой
+            if (id != null && !id.isEmpty()) {
+                // создаем объект ContactData с id, именем и фамилией
+                contacts.add(new ContactData()
+                        .withId(id)
+                        .withFirstName(firstName)
+                        .withLastName(lastName));
+            }
+        }
+        // возвращаем список всех найденных контактов
+        return contacts;
     }
 
     // метод для инициализации создания контакта
@@ -104,11 +139,22 @@ public class ContactsHelper extends HelperBase {
         type(By.name("email2"), contact.email2());
         type(By.name("email3"), contact.email3());
         type(By.name("homepage"), contact.homepage());
-        select(By.name("bday"), contact.birthdayDay());
-        select(By.name("bmonth"), contact.birthdayMonth());
+
+        // заполняем выпадающие списки только если значения не пустые и не равны значению по умолчанию "-"
+        if (contact.birthdayDay() != null && !contact.birthdayDay().isEmpty() && !contact.birthdayDay().equals("-")) {
+            select(By.name("bday"), contact.birthdayDay());
+        }
+        if (contact.birthdayMonth() != null && !contact.birthdayMonth().isEmpty() && !contact.birthdayMonth().equals("-")) {
+            select(By.name("bmonth"), contact.birthdayMonth());
+        }
         type(By.name("byear"), contact.birthdayYear());
-        select(By.name("aday"), contact.anniversaryDay());
-        select(By.name("amonth"), contact.anniversaryMonth());
+
+        if (contact.anniversaryDay() != null && !contact.anniversaryDay().isEmpty() && !contact.anniversaryDay().equals("-")) {
+            select(By.name("aday"), contact.anniversaryDay());
+        }
+        if (contact.anniversaryMonth() != null && !contact.anniversaryMonth().isEmpty() && !contact.anniversaryMonth().equals("-")) {
+            select(By.name("amonth"), contact.anniversaryMonth());
+        }
         type(By.name("ayear"), contact.anniversaryYear());
     }
 
@@ -129,10 +175,11 @@ public class ContactsHelper extends HelperBase {
         }
     }
 
-    // выбор первого контакта
-    private void selectFirstContact() {
-        click(By.name("selected[]"));
+    // выбор контакта по ID
+    private void selectContact(ContactData contact) {
+        click(By.cssSelector(String.format("input[value='%s']", contact.id())));
     }
+
 
     // выбор всех контактов
     private void selectAllContacts() {
@@ -145,19 +192,30 @@ public class ContactsHelper extends HelperBase {
     // удаление выбранных контактов
     private void deleteSelectedContacts() {
         click(By.xpath("//input[@value='Delete']"));
+
+        // Ожидаем подтверждения удаления (alert) и принимаем его
+        try {
+            WebDriverWait wait = new WebDriverWait(manager.driver, Duration.ofSeconds(5));
+            wait.until(ExpectedConditions.alertIsPresent());
+            manager.driver.switchTo().alert().accept();
+
+            // Ждем завершения удаления
+            wait.until(ExpectedConditions.or(
+                    ExpectedConditions.presenceOfElementLocated(By.cssSelector("div.msgbox")),
+                    ExpectedConditions.presenceOfElementLocated(By.name("searchstring"))
+            ));
+        } catch (Exception e) {
+            // Если алерт не появился, продолжаем выполнение
+        }
+
         waitForContactsList();
     }
 
-
-    //ожидание загрузки списка контактов
+    // ожидание загрузки списка контактов
     private void waitForContactsList() {
         new WebDriverWait(manager.driver, Duration.ofSeconds(5))
                 .until(ExpectedConditions.presenceOfElementLocated(By.name("searchstring")));
     }
 
-    //проверка наличия контактов
-    public boolean isContactPresent() {
-        openContactsPage();
-        return isElementPresent(By.name("selected[]"));
-    }
+
 }
