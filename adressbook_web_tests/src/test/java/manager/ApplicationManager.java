@@ -8,6 +8,8 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 
+import java.util.Properties;
+
 //Методы для инициализации драйвера , управления авторизацией и группами
 public class ApplicationManager {
     //статические поле для хранение экземпляра Webdriver
@@ -19,7 +21,10 @@ public class ApplicationManager {
     //вспомогательный класс для управления контактами
     private ContactsHelper contacts;
 
-    public void init(String browser) {
+    private Properties properties;
+
+    public void init(String browser, Properties properties) {
+        this.properties = properties;
         if (driver == null) {//если драйвер не инициализирован
             if ("firefox".equals(browser)){
                 driver = new FirefoxDriver();  //создаем новый FirefoxDriver
@@ -31,10 +36,10 @@ public class ApplicationManager {
                 throw new IllegalArgumentException(String.format("Unknow browser %s", browser));
             }
             Runtime.getRuntime().addShutdownHook(new Thread(driver::quit));  //хук для закрытия
-            driver.get("http://localhost/addressbook/");
+            driver.get(properties.getProperty("web.baseUrl"));
             driver.manage().window().setSize(new Dimension(1138, 692));
             driver.findElement(By.name("user")).click();
-            session().login("admin", "secret");
+            session().login(properties.getProperty("web.username"), properties.getProperty("web.password"));
         }
     }
 
