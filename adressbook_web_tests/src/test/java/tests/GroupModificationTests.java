@@ -11,30 +11,15 @@ import java.util.Random;
 
 public class GroupModificationTests extends TestBase{
 
-    // создание тестовых данных из XML файла
-    public static java.util.List<GroupData> groupProvider() throws IOException {
-        var result = new ArrayList<GroupData>();
-
-        // Чтение тестовых данных из XML файла
-        var mapper = new com.fasterxml.jackson.dataformat.xml.XmlMapper();
-        var value = mapper.readValue(new java.io.File("groups.xml"),
-                new com.fasterxml.jackson.core.type.TypeReference<java.util.List<GroupData>>() {});
-        result.addAll(value);
-
-        return result;
-    }
-
     @Test
     void canModifyGroup() throws IOException {
-        // проверяем, есть ли группы для модификации
-        if (app.groups().getCount() == 0) {
-            // если групп нет - создаем новую группу из XML данных
-            var groups = groupProvider();
-            app.groups().createGroup(groups.get(0));
+        // если групп нет - создать из XML данных
+        if (app.hbm().getGroupCount() == 0) {
+            app.hbm().createGroup(new GroupData("", "group name", "group header", "group footer"));
         }
 
-        // получаем список групп до модификации
-        var oldGroups = app.groups().getList();
+         // получаем список групп до модификации
+        var oldGroups = app.hbm().getGroupList();
         // создаем генератор случайных чисел
         var rnd = new Random();
         // выбираем случайную группу для модификации
@@ -44,7 +29,7 @@ public class GroupModificationTests extends TestBase{
         // модифицируем выбранную группу
         app.groups().modifyGroup(oldGroups.get(index), testData);
         // получаем список групп после модификации
-        var newGroups = app.groups().getList();
+        var newGroups = app.hbm().getGroupList();
         // создаем ожидаемый список групп
         var expectedList = new ArrayList<>(oldGroups);
         // заменяем модифицированную группу в ожидаемом списке

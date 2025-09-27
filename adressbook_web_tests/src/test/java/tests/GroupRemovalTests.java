@@ -11,33 +11,19 @@ import java.util.Random;
 
 public class GroupRemovalTests extends TestBase{
 
-    // создание тестовых данных из XML файла
-    public static java.util.List<GroupData> groupProvider() throws IOException {
-        var result = new ArrayList<GroupData>();
-
-        // Чтение тестовых данных из XML файла
-        var mapper = new com.fasterxml.jackson.dataformat.xml.XmlMapper();
-        var value = mapper.readValue(new java.io.File("groups.xml"),
-                new com.fasterxml.jackson.core.type.TypeReference<java.util.List<GroupData>>() {});
-        result.addAll(value);
-
-        return result;
-    }
-
     @Test
     public void canRemoveGroup() throws IOException {
         // если групп нет - создать из XML данных
-        if (app.groups().getCount() == 0) {
-            var groups = groupProvider();
-            app.groups().createGroup(groups.get(0));
+        if (app.hbm().getGroupCount() == 0) {
+            app.hbm().createGroup(new GroupData("", "group name", "group header", "group footer"));
         }
 
-        var oldGroups = app.groups().getList();
+        var oldGroups = app.hbm().getGroupList();
         var rnd = new Random();
         var index = rnd.nextInt(oldGroups.size());
         //запуск метода удаления группы
         app.groups().removeGroup(oldGroups.get(index));
-        var newGroups = app.groups().getList();
+        var newGroups = app.hbm().getGroupList();
         var expectedList = new ArrayList<>(oldGroups);
         expectedList.remove(index);
         Assertions.assertEquals(newGroups, expectedList);
@@ -46,12 +32,11 @@ public class GroupRemovalTests extends TestBase{
     @Test
     public void canRemoveAllGroupsAtOnce() throws IOException {
         // если групп нет - создать из XML данных
-        if (app.groups().getCount() == 0) {
-            var groups = groupProvider();
-            app.groups().createGroup(groups.get(0));
+        if (app.hbm().getGroupCount() == 0) {
+            app.hbm().createGroup(new GroupData("", "group name", "group header", "group footer"));
         }
 
         app.groups().removeAllGroups();
-        Assertions.assertEquals(0, app.groups().getCount());
+        Assertions.assertEquals(0, app.hbm().getGroupCount());
     }
 }

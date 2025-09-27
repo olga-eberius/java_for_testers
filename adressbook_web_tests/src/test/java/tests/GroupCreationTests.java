@@ -22,37 +22,6 @@ import java.util.List;
 // Создание групп
 public class GroupCreationTests extends TestBase{
 
-    // создание тестовых данных для позитивных сценариев
-    public static List<GroupData> groupProvider() throws IOException {
-        var result = new ArrayList<GroupData>();
-//        // с пустыми и непустыми значениями
-//        for (var name: List.of("","group name")){
-//            for (var header: List.of("","group header")) {
-//                for (var footer: List.of("", "group header")) {
-//                    result.add(new GroupData()
-//                            .withName(name)
-//                            .withHeader(header)
-//                            .withFooter(footer));
-//                }
-//            }
-//        }
-//        var json = "";
-//        try (var reader = new FileReader("groups.json");
-//             var breader = new BufferedReader(reader)
-//        ) {
-//            var line = breader.readLine();
-//            while (line!=null){
-//                json = json + line;
-//                line = breader.readLine();
-//            }
-//        }
-//        var json = Files.readString(Paths.get("groups.json"));
-        var mapper = new XmlMapper();
-        var value = mapper.readValue(new File("groups.xml"), new TypeReference<List<GroupData>>() {});
-        result.addAll(value);
-        return result;
-    }
-
     // тестовые данные негативных сценариев
     public static List<GroupData> negativeGroupProvider() {
         var result = new ArrayList<GroupData>(List.of(
@@ -60,26 +29,34 @@ public class GroupCreationTests extends TestBase{
         return result;
     }
 
+    public static List<GroupData> singleRandomGroup(){
+        return List.of(new GroupData()
+                .withName(CommonFunctions.randomString(10))
+                .withHeader(CommonFunctions.randomString(20))
+                .withFooter(CommonFunctions.randomString(30)));
+
+    }
+
     // Проверка создания групп с различными валидными данными
     @ParameterizedTest
-    @MethodSource("groupProvider")
-    public void canCreateMultipleGroups(GroupData group) {
+    @MethodSource("singleRandomGroup")
+    public void canCreateGroup(GroupData group) {
         // получение списка групп до создания
-        var oldGroups = app.groups().getList();
-        int groupCount = app.groups().getCount();
+        var oldGroups = app.jdbc().getGroupList();
         // создание новой группы
         app.groups().createGroup(group);
         // получение списка групп после создания
-        var newGroups = app.groups().getList();
+        var newGroups = app.jdbc().getGroupList();
         // компаратор для сортировки групп по ID
         Comparator<GroupData> compareById = (o1, o2) -> {
             return Integer.compare(Integer.parseInt(o1.id()), Integer.parseInt(o2.id()));
         };
         newGroups.sort(compareById);
+        var maxId = newGroups.get(newGroups.size() - 1).id();
 
         // формирование ожидаемого списка групп
         var expectedList = new ArrayList<>(oldGroups);
-        expectedList.add(group.withId(newGroups.get(newGroups.size() - 1).id()).withHeader("").withFooter(""));
+        expectedList.add(group.withId(maxId));
         expectedList.sort(compareById);
         // сравнение списков групп
         Assertions.assertEquals(newGroups, expectedList);

@@ -1,6 +1,7 @@
 package manager;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
+import org.hibernate.Hibernate;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.NoSuchElementException;
@@ -20,6 +21,10 @@ public class ApplicationManager {
     private GroupHelper groups;
     //вспомогательный класс для управления контактами
     private ContactsHelper contacts;
+
+    private JdbcHelper jdbc;
+
+    private HibernateHelper hbm;
 
     private Properties properties;
 
@@ -66,6 +71,21 @@ public class ApplicationManager {
         }
         return contacts;
     }
+
+    public JdbcHelper jdbc() {
+        if (jdbc == null) {
+            jdbc = new JdbcHelper(this);
+        }
+        return jdbc;
+    }
+
+    public HibernateHelper hbm() {
+        if (hbm == null) {
+            hbm = new HibernateHelper(this);
+        }
+        return hbm;
+    }
+
 
     //проверка наличия элемента на странице
     public boolean isElementPresent(By locator) {
