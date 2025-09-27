@@ -1,5 +1,6 @@
 package tests;
 
+import common.CommonFunctions;
 import model.ContactData;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -30,9 +31,9 @@ public class ContactCreationTests extends TestBase {
         // рандомные данные (только основные поля, без выпадающих списков)
         for (int i = 0; i < 5; i++) {
             result.add(new ContactData()
-                    .withFirstName(randomString(i * 5))
-                    .withLastName(randomString(i * 5))
-                    .withEmail(randomString(i * 5) + "@test.ru"));
+                    .withFirstName(CommonFunctions.randomString(i * 5))
+                    .withLastName(CommonFunctions.randomString(i * 5))
+                    .withEmail(CommonFunctions.randomString(i * 5) + "@test.ru"));
         }
 
         return result;
@@ -112,7 +113,6 @@ public class ContactCreationTests extends TestBase {
                 .withEmail2("email2@test.ru")
                 .withEmail3("email3@test.ru")
                 .withHomepage("www.rntv.ru")
-                // корректные значения для дней (1-31)
                 .withBirthdayDay("15")
                 .withBirthdayMonth("December")
                 .withBirthdayYear("1988")
@@ -188,5 +188,15 @@ public class ContactCreationTests extends TestBase {
         expectedList.sort(compareById);
         // сравнение списков контактов
         Assertions.assertEquals(newContacts, expectedList);
+    }
+
+    // тест создания контакта с фото (минимальная проверка)
+    @Test
+    public void canCreateContactWithPhoto() {
+        var contact = new ContactData()
+                .withFirstName(CommonFunctions.randomString(10))
+                .withLastName(CommonFunctions.randomString(10))
+                .withPhoto(randomFile("src/test/resources/images"));
+        app.contacts().createContact(contact);
     }
 }

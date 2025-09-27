@@ -119,6 +119,7 @@ public class ContactsHelper extends HelperBase {
         type(By.name("middlename"), contact.middleName());
         type(By.name("lastname"), contact.lastName());
         type(By.name("nickname"), contact.nickname());
+        //проверить, что фото не null и не пустое
         if (contact.photo() != null && !contact.photo().isEmpty()) {
             attach(By.name("photo"), contact.photo());
         }

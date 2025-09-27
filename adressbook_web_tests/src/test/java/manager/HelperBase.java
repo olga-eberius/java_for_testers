@@ -4,6 +4,8 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.NoSuchElementException;
 import java.io.File;
+import java.nio.file.Paths;
+
 import org.openqa.selenium.WebDriver;
 
 public class HelperBase {
@@ -48,7 +50,7 @@ public class HelperBase {
 
     //метод для прикрепления файла к элементу
     protected void attach(By locator, String file) {
-        driver.findElement(locator).sendKeys(new File(file).getAbsolutePath());
+        driver.findElement(locator).sendKeys(Paths.get(file).toAbsolutePath().toString());
     }
 
     //метод для выбора значения из выпадающего списка
