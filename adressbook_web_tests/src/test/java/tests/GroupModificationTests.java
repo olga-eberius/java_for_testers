@@ -4,19 +4,35 @@ import model.GroupData;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Random;
 
 public class GroupModificationTests extends TestBase{
 
+    // создание тестовых данных из XML файла
+    public static java.util.List<GroupData> groupProvider() throws IOException {
+        var result = new ArrayList<GroupData>();
+
+        // Чтение тестовых данных из XML файла
+        var mapper = new com.fasterxml.jackson.dataformat.xml.XmlMapper();
+        var value = mapper.readValue(new java.io.File("groups.xml"),
+                new com.fasterxml.jackson.core.type.TypeReference<java.util.List<GroupData>>() {});
+        result.addAll(value);
+
+        return result;
+    }
+
     @Test
-    void canModifyGroup(){
+    void canModifyGroup() throws IOException {
         // проверяем, есть ли группы для модификации
         if (app.groups().getCount() == 0) {
-            // если групп нет - создаем новую группу
-            app.groups().createGroup(new GroupData("", "group name", "group header", "group footer"));
+            // если групп нет - создаем новую группу из XML данных
+            var groups = groupProvider();
+            app.groups().createGroup(groups.get(0));
         }
+
         // получаем список групп до модификации
         var oldGroups = app.groups().getList();
         // создаем генератор случайных чисел
@@ -42,8 +58,5 @@ public class GroupModificationTests extends TestBase{
         expectedList.sort(compareById);
         // проверяем, что списки совпадают
         Assertions.assertEquals(newGroups, expectedList);
-
     }
-
 }
-

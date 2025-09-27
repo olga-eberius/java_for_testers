@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import common.CommonFunctions;
+import model.ContactData;
 import model.GroupData;
 
 import java.io.File;
@@ -31,9 +32,9 @@ public class Generator {
     public static void main(String[] args) throws IOException {
         var generator = new Generator();
         JCommander.newBuilder()
-                        .addObject(generator)
-                        .build()
-                        .parse(args);
+                .addObject(generator)
+                .build()
+                .parse(args);
         generator.run();
     }
 
@@ -48,8 +49,7 @@ public class Generator {
         } else if ("contacts".equals(type)) {
             return generateContacts();
         } else {
-            throw new IllegalArgumentException("Неизвестный тип данных"+type);
-
+            throw new IllegalArgumentException("Неизвестный тип данных: " + type);
         }
     }
 
@@ -65,7 +65,35 @@ public class Generator {
     }
 
     private Object generateContacts() {
-        return null;
+        var result = new ArrayList<ContactData>();
+        for (int i = 0; i < count; i++) {
+            result.add(new ContactData(
+                    "", // id
+                    CommonFunctions.randomString(i * 5), // firstName
+                    CommonFunctions.randomString(i * 5), // middleName
+                    CommonFunctions.randomString(i * 5), // lastName
+                    CommonFunctions.randomString(i * 5), // nickname
+                    "", // photo
+                    CommonFunctions.randomString(i * 5), // title
+                    CommonFunctions.randomString(i * 5), // company
+                    CommonFunctions.randomString(i * 10), // address
+                    CommonFunctions.randomPhone(), // homePhone
+                    CommonFunctions.randomPhone(), // mobilePhone
+                    CommonFunctions.randomPhone(), // workPhone
+                    CommonFunctions.randomPhone(), // fax
+                    CommonFunctions.randomEmail(), // email
+                    CommonFunctions.randomEmail(), // email2
+                    CommonFunctions.randomEmail(), // email3
+                    "https://" + CommonFunctions.randomString(5) + ".com", // homepage
+                    String.valueOf(i % 28 + 1), // birthdayDay
+                    "January", // birthdayMonth
+                    String.valueOf(1980 + i % 20), // birthdayYear
+                    String.valueOf(i % 28 + 1), // anniversaryDay
+                    "February", // anniversaryMonth
+                    String.valueOf(2000 + i % 20) // anniversaryYear
+            ));
+        }
+        return result;
     }
 
     private void save(Object data) throws IOException {
@@ -77,16 +105,14 @@ public class Generator {
             try (var writer = new FileWriter(output)) {
                 writer.write(json);
             }
-        } if ("yaml".equals(format)) {
+        } else if ("yaml".equals(format)) {
             var mapper = new YAMLMapper();
             mapper.writeValue(new File(output), data);
-        } if ("xml".equals(format)) {
+        } else if ("xml".equals(format)) {
             var mapper = new XmlMapper();
             mapper.writeValue(new File(output), data);
-
         } else {
-            throw new IllegalArgumentException("Неизвестный формат данных" + format);
+            throw new IllegalArgumentException("Неизвестный формат данных: " + format);
         }
     }
-    
 }

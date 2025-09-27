@@ -4,18 +4,32 @@ import model.ContactData;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Random;
 
 public class ContactRemovalTests extends TestBase {
 
+    // создание тестовых данных из XML файла
+    public static java.util.List<ContactData> contactProvider() throws IOException {
+        var result = new ArrayList<ContactData>();
+
+        // Чтение тестовых данных из XML файла
+        var mapper = new com.fasterxml.jackson.dataformat.xml.XmlMapper();
+        var value = mapper.readValue(new java.io.File("contacts.xml"),
+                new com.fasterxml.jackson.core.type.TypeReference<java.util.List<ContactData>>() {});
+        result.addAll(value);
+
+        return result;
+    }
+
     @Test
-    public void canRemoveContact() {
+    public void canRemoveContact() throws IOException {
         if (app.contacts().getCount() == 0) {
-            app.contacts().createContact(new ContactData()
-                    .withFirstName("Petya")
-                    .withLastName("Vasechkin"));
+            // если контактов нет, создаем один из XML данных
+            var contacts = contactProvider();
+            app.contacts().createContact(contacts.get(0));
         }
 
         // получаем список контактов до удаления
@@ -29,6 +43,7 @@ public class ContactRemovalTests extends TestBase {
         // удаляем контакт
         app.contacts().removeContact(contactToRemove);
 
+        // НЕ вызываем openContactsPage() - метод getList() уже содержит эту логику
         // получаем список контактов после удаления
         var newContacts = app.contacts().getList();
 
@@ -48,14 +63,16 @@ public class ContactRemovalTests extends TestBase {
     }
 
     @Test
-    public void canRemoveAllContactsAtOnce() {
+    public void canRemoveAllContactsAtOnce() throws IOException {
         if (app.contacts().getCount() == 0) {
-            app.contacts().createContact(new ContactData()
-                    .withFirstName("Petya")
-                    .withLastName("Vasechkin"));
+            // если контактов нет, создаем один из XML данных
+            var contacts = contactProvider();
+            app.contacts().createContact(contacts.get(0));
         }
 
         app.contacts().removeAllContacts();
+
+        // НЕ вызываем openContactsPage() - метод getCount() уже содержит эту логику
         Assertions.assertEquals(0, app.contacts().getCount());
     }
 }

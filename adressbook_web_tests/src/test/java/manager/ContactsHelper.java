@@ -42,7 +42,7 @@ public class ContactsHelper extends HelperBase {
         openContactsPage();
         selectContact(contact);
         deleteSelectedContacts();
-        returnToContactsPage();
+        returnToHomePage();
     }
 
     // метод для модификации контакта
@@ -60,6 +60,21 @@ public class ContactsHelper extends HelperBase {
         openContactsPage();
         selectAllContacts();
         deleteSelectedContacts();
+        returnToHomePage();
+    }
+
+    // новый метод для возврата на домашнюю страницу через ссылку "home page"
+    private void returnToHomePage() {
+        WebDriverWait wait = new WebDriverWait(manager.driver, Duration.ofSeconds(10));
+        try {
+            // Ждем появления ссылки "home page" и кликаем по ней
+            wait.until(ExpectedConditions.elementToBeClickable(By.linkText("home page"))).click();
+            // Ждем загрузки страницы контактов
+            wait.until(ExpectedConditions.presenceOfElementLocated(By.name("searchstring")));
+        } catch (Exception e) {
+            // Если ссылки "home page" нет, пробуем стандартный способ
+            returnToContactsPage();
+        }
     }
 
     // метод для получения количества контактов
