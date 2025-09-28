@@ -4,49 +4,43 @@ import model.ContactData;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Random;
 
 public class ContactModificationTests extends TestBase {
 
-    // создание тестовых данных из XML файла
-    public static java.util.List<ContactData> contactProvider() throws IOException {
-        var result = new ArrayList<ContactData>();
-
-        var mapper = new com.fasterxml.jackson.dataformat.xml.XmlMapper();
-        var value = mapper.readValue(new java.io.File("contacts.xml"),
-                new com.fasterxml.jackson.core.type.TypeReference<java.util.List<ContactData>>() {});
-        result.addAll(value);
-
-        return result;
-    }
-
     @Test
-    void canModifyContact() throws IOException {
+    void canModifyContact() {
         // проверка наличия контактов для модификации
-        if (app.contacts().getCount() == 0) {
-            // если контактов нет, создаем один из XML данных
-            var contacts = contactProvider();
-            app.contacts().createContact(contacts.get(0));
+        if (app.hbm().getContactCount() == 0) {
+            // создаем контакт
+            app.contacts().createContact(new ContactData()
+                    .withFirstName("First Name")
+                    .withLastName("Last Name"));
         }
 
-        var oldContacts = app.contacts().getList();
-        var rnd = new Random();
-        var index = rnd.nextInt(oldContacts.size());
-        var contactToModify = oldContacts.get(index);
+        // получаем контакты со страницы
+        var uiContacts = app.contacts().getList();
+        if (uiContacts.isEmpty()) {
+            throw new IllegalStateException("No contacts found on the web page");
+        }
+
+        var contactToModify = uiContacts.get(0);
         var contactId = contactToModify.id();
+
+        System.out.println("Modifying contact with UI ID: " + contactId);
 
         // создаем копию контакта с измененными только основными полями
         ContactData testData = contactToModify
                 .withFirstName("modified first name")
                 .withLastName("modified last name");
 
+        // модификация контакта через UI
         app.contacts().modifyContact(contactToModify, testData);
 
-        var newContacts = app.contacts().getList();
-        var expectedList = new ArrayList<>(oldContacts);
+        // получаем актуальный список с веб-страницы после модификации
+        var newUiContacts = app.contacts().getList();
+        var expectedList = new ArrayList<>(uiContacts);
 
         // замена модифицированного контакта в ожидаемом списке
         for (int i = 0; i < expectedList.size(); i++) {
@@ -56,14 +50,17 @@ public class ContactModificationTests extends TestBase {
             }
         }
 
-        // сортировка списков для сравнения
+        //компаратор для сортировки контактов по ID
         Comparator<ContactData> compareById = (o1, o2) -> {
+            if (o1.id().isEmpty() && o2.id().isEmpty()) return 0;
+            if (o1.id().isEmpty()) return -1;
+            if (o2.id().isEmpty()) return 1;
             return Integer.compare(Integer.parseInt(o1.id()), Integer.parseInt(o2.id()));
         };
 
-        newContacts.sort(compareById);
+        newUiContacts.sort(compareById);
         expectedList.sort(compareById);
 
-        Assertions.assertEquals(expectedList, newContacts);
+        Assertions.assertEquals(newUiContacts, expectedList);
     }
 }

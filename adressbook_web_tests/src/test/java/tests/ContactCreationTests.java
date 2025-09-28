@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import common.CommonFunctions;
 import model.ContactData;
+import model.GroupData;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -40,49 +41,62 @@ public class ContactCreationTests extends TestBase {
         return result;
     }
 
-    // проверка создания контактов с различными данными через сравнение списков
+    // проверка создания контактов с различными данными через сравнение списков из БД
     @ParameterizedTest
     @MethodSource("contactProvider")
     public void canCreateMultipleContacts(ContactData contact) {
-        // получение списка контактов до создания
-        var oldContacts = app.contacts().getList();
+        // получение списка контактов из БД до создания
+        var oldContacts = app.hbm().getContactList();
         // создание нового контакта
         app.contacts().createContact(contact);
-        // получение списка контактов после создания
-        var newContacts = app.contacts().getList();
-        // компаратор для сортировки контактов по ID
+        // получение списка контактов из БД после создания
+        var newContacts = app.hbm().getContactList();
+
+        // компаратор для сортировки контактов по ID с обработкой пустых значений
         Comparator<ContactData> compareById = (o1, o2) -> {
+            // Обработка пустых ID - считаем их меньшими чем любые непустые
+            if (o1.id().isEmpty() && o2.id().isEmpty()) {
+                return 0;
+            }
+            if (o1.id().isEmpty()) {
+                return -1;
+            }
+            if (o2.id().isEmpty()) {
+                return 1;
+            }
             return Integer.compare(Integer.parseInt(o1.id()), Integer.parseInt(o2.id()));
         };
+
         newContacts.sort(compareById);
 
         // формирование ожидаемого списка контактов
         var expectedList = new ArrayList<>(oldContacts);
         expectedList.add(contact.withId(newContacts.get(newContacts.size() - 1).id()));
         expectedList.sort(compareById);
-        // сравнение списков контактов
+
+        // сравнение списков контактов из БД
         Assertions.assertEquals(newContacts, expectedList);
     }
 
-    // проверка невозможности создания контактов с апострофами в имени или фамилии через сравнение списков
+    // проверка невозможности создания контактов с апострофами через сравнение списков из БД
     @ParameterizedTest
     @MethodSource("negativeContactProvider")
     public void canNotCreateContactWithApostrophes(ContactData contact) {
-        // получение списка контактов до попытки создания
-        var oldContacts = app.contacts().getList();
+        // получение списка контактов из БД до попытки создания
+        var oldContacts = app.hbm().getContactList();
         // попытка создания контакта с невалидными данными
         app.contacts().createContact(contact);
-        // получение списка контактов после попытки создания
-        var newContacts = app.contacts().getList();
-        // сравнение списков контактов (контакт не создан)
+        // получение списка контактов из БД после попытки создания
+        var newContacts = app.hbm().getContactList();
+        // сравнение списков контактов из БД (контакт не создан)
         Assertions.assertEquals(newContacts, oldContacts);
     }
 
-    // тест со всеми заполненными полями через сравнение списков (с корректными значениями для селектов)
+    // тест со всеми заполненными полями через сравнение списков из БД
     @Test
     public void canCreateContactWithAllFields() {
-        // получение списка контактов до создания
-        var oldContacts = app.contacts().getList();
+        // получение списка контактов из БД до создания
+        var oldContacts = app.hbm().getContactList();
 
         // используем корректные значения для выпадающих списков
         ContactData contact = new ContactData()
@@ -110,51 +124,76 @@ public class ContactCreationTests extends TestBase {
 
         // создание нового контакта
         app.contacts().createContact(contact);
-        // получение списка контактов после создания
-        var newContacts = app.contacts().getList();
-        // компаратор для сортировки контактов по ID
+        // получение списка контактов из БД после создания
+        var newContacts = app.hbm().getContactList();
+
+        // компаратор для сортировки контактов по ID с обработкой пустых значений
         Comparator<ContactData> compareById = (o1, o2) -> {
+            // Обработка пустых ID
+            if (o1.id().isEmpty() && o2.id().isEmpty()) {
+                return 0;
+            }
+            if (o1.id().isEmpty()) {
+                return -1;
+            }
+            if (o2.id().isEmpty()) {
+                return 1;
+            }
             return Integer.compare(Integer.parseInt(o1.id()), Integer.parseInt(o2.id()));
         };
+
         newContacts.sort(compareById);
 
         // формирование ожидаемого списка контактов
         var expectedList = new ArrayList<>(oldContacts);
         expectedList.add(contact.withId(newContacts.get(newContacts.size() - 1).id()));
         expectedList.sort(compareById);
-        // сравнение списков контактов
+
+        // сравнение списков контактов из БД
         Assertions.assertEquals(newContacts, expectedList);
     }
 
-    // тест с пустыми данными через сравнение списков
+    // тест с пустыми данными через сравнение списков из БД
     @Test
     public void canCreateContactWithEmptyData() {
-        // получение списка контактов до создания
-        var oldContacts = app.contacts().getList();
-
+        // получение списка контактов из БД до создания
+        var oldContacts = app.hbm().getContactList();
         // создание контакта с пустыми данными
-        app.contacts().createContact(new ContactData());
-        // получение списка контактов после создания
-        var newContacts = app.contacts().getList();
-        // компаратор для сортировки контактов по ID
+        var emptyContact = new ContactData();
+        app.contacts().createContact(emptyContact);
+        // получение списка контактов из БД после создания
+        var newContacts = app.hbm().getContactList();
+        // компаратор для сортировки контактов по ID с обработкой пустых значений
         Comparator<ContactData> compareById = (o1, o2) -> {
+            // Обработка пустых ID
+            if (o1.id().isEmpty() && o2.id().isEmpty()) {
+                return 0;
+            }
+            if (o1.id().isEmpty()) {
+                return -1;
+            }
+            if (o2.id().isEmpty()) {
+                return 1;
+            }
             return Integer.compare(Integer.parseInt(o1.id()), Integer.parseInt(o2.id()));
         };
         newContacts.sort(compareById);
-
+        // Находим ID созданного контакта (последний в отсортированном списке)
+        String newContactId = newContacts.get(newContacts.size() - 1).id();
         // формирование ожидаемого списка контактов
         var expectedList = new ArrayList<>(oldContacts);
-        expectedList.add(new ContactData().withId(newContacts.get(newContacts.size() - 1).id()));
+        // Добавляем контакт с тем же ID, что и созданный
+        expectedList.add(emptyContact.withId(newContactId));
         expectedList.sort(compareById);
-        // сравнение списков контактов
+        // сравнение списков контактов из БД
         Assertions.assertEquals(newContacts, expectedList);
     }
 
-    // простой тест только с обязательными полями (имя и фамилия)
+    // простой тест только с обязательными полями через сравнение списков из БД
     @Test
     public void canCreateContactWithRequiredFieldsOnly() {
-        // получение списка контактов до создания
-        var oldContacts = app.contacts().getList();
+        // получение списка контактов из БД до создания
+        var oldContacts = app.hbm().getContactList();
 
         ContactData contact = new ContactData()
                 .withFirstName("Olga")
@@ -162,29 +201,77 @@ public class ContactCreationTests extends TestBase {
 
         // создание нового контакта
         app.contacts().createContact(contact);
-        // получение списка контактов после создания
-        var newContacts = app.contacts().getList();
-        // компаратор для сортировки контактов по ID
+        // получение списка контактов из БД после создания
+        var newContacts = app.hbm().getContactList();
+
+        // компаратор для сортировки контактов по ID с обработкой пустых значений
         Comparator<ContactData> compareById = (o1, o2) -> {
+            // Обработка пустых ID
+            if (o1.id().isEmpty() && o2.id().isEmpty()) {
+                return 0;
+            }
+            if (o1.id().isEmpty()) {
+                return -1;
+            }
+            if (o2.id().isEmpty()) {
+                return 1;
+            }
             return Integer.compare(Integer.parseInt(o1.id()), Integer.parseInt(o2.id()));
         };
+
         newContacts.sort(compareById);
 
         // формирование ожидаемого списка контактов
         var expectedList = new ArrayList<>(oldContacts);
         expectedList.add(contact.withId(newContacts.get(newContacts.size() - 1).id()));
         expectedList.sort(compareById);
-        // сравнение списков контактов
+
+        // сравнение списков контактов из БД
         Assertions.assertEquals(newContacts, expectedList);
     }
 
-    // тест создания контакта с фото (минимальная проверка)
+    // тест создания контакта с фото через сравнение списков из БД
     @Test
     public void canCreateContactWithPhoto() {
+        // получение списка контактов из БД до создания
+        var oldContacts = app.hbm().getContactList();
+
         var contact = new ContactData()
                 .withFirstName(CommonFunctions.randomString(10))
                 .withLastName(CommonFunctions.randomString(10))
                 .withPhoto(randomFile("src/test/resources/images"));
+
+        // создание контакта
         app.contacts().createContact(contact);
+
+        // получение списка контактов из БД после создания
+        var newContacts = app.hbm().getContactList();
+
+        // проверка увеличения количества контактов в БД
+        Assertions.assertEquals(oldContacts.size() + 1, newContacts.size());
+    }
+
+    // тест добавления контакта в группу через проверку БД
+    @Test
+    public void canCreateContactInGroup() {
+        var contact = new ContactData()
+                .withFirstName(CommonFunctions.randomString(10))
+                .withLastName(CommonFunctions.randomString(10))
+                .withPhoto(randomFile("src/test/resources/images"));
+
+        if (app.hbm().getGroupCount() == 0) {
+            app.hbm().createGroup(new GroupData("", "group name", "group header", "group footer"));
+        }
+        var group = app.hbm().getGroupList().get(0);
+
+        // получение списка контактов в группе из БД до создания
+        var oldRelated = app.hbm().getContactsInGroup(group);
+
+        // создание контакта в группе
+        app.contacts().create(contact, group);
+
+        // получение списка контактов в группе из БД после создания
+        var newRelated = app.hbm().getContactsInGroup(group);
+        Assertions.assertEquals(oldRelated.size() + 1, newRelated.size());
     }
 }

@@ -4,7 +4,6 @@ import model.GroupData;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Random;
@@ -12,36 +11,46 @@ import java.util.Random;
 public class GroupModificationTests extends TestBase{
 
     @Test
-    void canModifyGroup() throws IOException {
-        // если групп нет - создать из XML данных
+    void canModifyGroup() {
+        // если групп нет - создать
         if (app.hbm().getGroupCount() == 0) {
             app.hbm().createGroup(new GroupData("", "group name", "group header", "group footer"));
         }
 
-         // получаем список групп до модификации
+        // получаем список групп из БД до модификации
         var oldGroups = app.hbm().getGroupList();
-        // создаем генератор случайных чисел
         var rnd = new Random();
-        // выбираем случайную группу для модификации
         var index = rnd.nextInt(oldGroups.size());
+        var groupToModify = oldGroups.get(index);
+
         // создаем тестовые данные с новым именем группы
         GroupData testData = new GroupData().withName("modified name");
-        // модифицируем выбранную группу
-        app.groups().modifyGroup(oldGroups.get(index), testData);
-        // получаем список групп после модификации
+
+        // модифицируем выбранную группу через UI
+        app.groups().modifyGroup(groupToModify, testData);
+
+        // получаем список групп из БД после модификации
         var newGroups = app.hbm().getGroupList();
+
         // создаем ожидаемый список групп
         var expectedList = new ArrayList<>(oldGroups);
+
         // заменяем модифицированную группу в ожидаемом списке
         expectedList.set(index, testData.withId(oldGroups.get(index).id()));
-        // создаем компаратор для сортировки по ID
+
+        // безопасный компаратор для сортировки по ID
         Comparator<GroupData> compareById = (o1, o2) -> {
+            if (o1.id().isEmpty() && o2.id().isEmpty()) return 0;
+            if (o1.id().isEmpty()) return -1;
+            if (o2.id().isEmpty()) return 1;
             return Integer.compare(Integer.parseInt(o1.id()), Integer.parseInt(o2.id()));
         };
+
         // сортируем актуальный и ожидаемый списки
         newGroups.sort(compareById);
         expectedList.sort(compareById);
-        // проверяем, что списки совпадают
+
+        // проверяем, что списки из БД совпадают
         Assertions.assertEquals(newGroups, expectedList);
     }
 }

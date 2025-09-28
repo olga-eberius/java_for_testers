@@ -24,7 +24,7 @@ public class ApplicationManager {
 
     private JdbcHelper jdbc;
 
-    private HibernateHelper hbm;
+    public HibernateHelper hbm;
 
     private Properties properties;
 
