@@ -1,6 +1,8 @@
 package manager;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
+import model.ContactData;
+import model.GroupData;
 import org.hibernate.Hibernate;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
@@ -8,8 +10,11 @@ import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.support.ui.Select;
 
+import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 //Методы для инициализации драйвера , управления авторизацией и группами
 public class ApplicationManager {
@@ -95,6 +100,40 @@ public class ApplicationManager {
         } catch (NoSuchElementException exception) {
             return false;
         }
+    }
+
+    public boolean isContactInGroup(ContactData contact, GroupData group) {
+        var contactsInGroup = hbm().getContactsInGroup(group);
+        return contactsInGroup.stream()
+                .anyMatch(c -> c.id().equals(contact.id()));
+    }
+
+    public List<ContactData> getContactsNotInGroup(GroupData group) {
+        var allContacts = hbm().getContactList();
+        var contactsInGroup = hbm().getContactsInGroup(group);
+        return allContacts.stream()
+                .filter(c -> contactsInGroup.stream().noneMatch(gc -> gc.id().equals(c.id())))
+                .collect(Collectors.toList());
+    }
+     
+    public List<ContactData> getContactsInGroup(GroupData group) {
+        return hbm().getContactsInGroup(group);
+    }
+
+    public String getFirstContactIdInGroup(GroupData group) {
+        contacts().openContactsPage();
+
+        var groupSelect = new Select(driver.findElement(By.name("group")));
+        groupSelect.selectByValue(group.id());
+
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        var firstContact = driver.findElement(By.cssSelector("input[name='selected[]']"));
+        return firstContact.getAttribute("value");
     }
 
 }

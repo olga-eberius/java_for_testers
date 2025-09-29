@@ -11,6 +11,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class ContactsHelper extends HelperBase {
 
     public ContactsHelper(ApplicationManager manager) {
@@ -185,7 +186,7 @@ public class ContactsHelper extends HelperBase {
         }
     }
 
-    private void selectContact(ContactData contact) {
+   private void selectContact(ContactData contact) {
         var xpath = String.format("//tr[.//input[@value='%s']]//input[@name='selected[]']", contact.id());
         var checkbox = manager.driver.findElement(By.xpath(xpath));
         ((JavascriptExecutor) manager.driver).executeScript("arguments[0].click();", checkbox);
@@ -206,7 +207,7 @@ public class ContactsHelper extends HelperBase {
             wait.until(ExpectedConditions.alertIsPresent());
             manager.driver.switchTo().alert().accept();
 
-            // увеличиваем время ожидания и добавляем альтернативные условия
+            // увеличиваем время ожидания и добавляем условия
             wait = new WebDriverWait(manager.driver, Duration.ofSeconds(10));
             wait.until(ExpectedConditions.or(
                     ExpectedConditions.presenceOfElementLocated(By.name("searchstring")),
@@ -224,4 +225,65 @@ public class ContactsHelper extends HelperBase {
             Thread.currentThread().interrupt();
         }
     }
+
+    public void addContactToGroup(ContactData contact, GroupData group) {
+        openContactsPage();
+        selectContact(contact);
+        new Select(manager.driver.findElement(By.name("to_group"))).selectByValue(group.id());
+        click(By.name("add"));
+        returnToContactsPage();
+    }
+
+    public void removeContactFromGroup(ContactData contact, GroupData group) {
+        System.out.println("=== removeContactFromGroup ===");
+        System.out.println("Contact ID: " + contact.id() + ", Group ID: " + group.id());
+
+        openContactsPage();
+
+        try {
+            // Выбираем группу в фильтре
+            var groupSelect = new Select(manager.driver.findElement(By.name("group")));
+            groupSelect.selectByValue(group.id());
+            System.out.println("Group selected in filter: " + group.id());
+
+            // Ждем обновления списка
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+
+            // Отладочная информация: какие контакты отображаются после фильтрации
+            var displayedContacts = manager.driver.findElements(By.cssSelector("input[name='selected[]']"));
+            System.out.println("Отображено контактов после фильтрации: " + displayedContacts.size());
+
+            for (var elem : displayedContacts) {
+                String contactId = elem.getAttribute("value");
+                System.out.println("Отображен контакт с ID: " + contactId);
+            }
+
+            // Выбираем контакт
+            selectContact(contact);
+            System.out.println("Contact selected");
+
+            // Нажимаем кнопку удаления
+            var removeButton = manager.driver.findElement(By.name("remove"));
+            removeButton.click();
+            System.out.println("Remove button clicked");
+
+            // Ждем обновления
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+
+        } catch (Exception e) {
+            System.out.println("Error in removeContactFromGroup: " + e.getMessage());
+            throw e;
+        }
+
+        returnToContactsPage();
+    }
+
 }

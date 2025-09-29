@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.openqa.selenium.support.ui.Select;
 
 import java.io.File;
 import java.io.IOException;
@@ -274,4 +275,46 @@ public class ContactCreationTests extends TestBase {
         var newRelated = app.hbm().getContactsInGroup(group);
         Assertions.assertEquals(oldRelated.size() + 1, newRelated.size());
     }
+
+    // тест удаления контакта из группы через проверку БД
+    @Test
+    void canRemoveContactFromGroup() {
+        if (app.hbm().getGroupCount() == 0) {
+            app.hbm().createGroup(new GroupData("", "group name", "group header", "group footer"));
+        }
+        var group = app.hbm().getGroupList().get(0);
+
+        // если в группе нет контактов, создаем контакт в этой группе
+        if (app.hbm().getContactsInGroup(group).isEmpty()) {
+            var contact = new ContactData()
+                    .withFirstName(CommonFunctions.randomString(10))
+                    .withLastName(CommonFunctions.randomString(10));
+
+            // создание контакта в группе
+            app.contacts().create(contact, group);
+        }
+
+        // получение списка контактов в группе из БД до удаления
+        var oldRelated = app.hbm().getContactsInGroup(group);
+
+        // получаем реальный ID из UI
+        var realContactId = app.getFirstContactIdInGroup(group);
+
+        // Создаем контакт с реальным ID
+        var contactToRemove = new ContactData()
+                .withId(realContactId)
+                .withFirstName(oldRelated.get(0).firstName())
+                .withLastName(oldRelated.get(0).lastName());
+
+        // удаление контакта из группы
+        app.contacts().removeContactFromGroup(contactToRemove, group);
+
+        // получение списка контактов в группе из БД после удаления
+        var newRelated = app.hbm().getContactsInGroup(group);
+
+        // проверка, что количество контактов в группе уменьшилось на 1
+        Assertions.assertEquals(oldRelated.size() - 1, newRelated.size());
+    }
+
+
 }
