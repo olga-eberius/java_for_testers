@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 
@@ -32,4 +33,17 @@ public class CollectionTests {
         list.set(0, "d");  //обновление первого элемента
         Assertions.assertEquals("d", list.get(0)); //проверка обновленного значения первого элемента
     }
+
+    @Test
+    void TestMap(){
+        var digits = new HashMap<Character, String>();
+        digits.put('1', "one");
+        digits.put('2', "two");
+        digits.put('3', "three");
+
+        Assertions.assertEquals("one", digits.get('1'));
+        digits.put('1',"один");
+        Assertions.assertEquals("один", digits.get('1'));
+    }
+
 }

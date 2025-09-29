@@ -7,8 +7,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 
 public class GroupCreationTests extends TestBase{
@@ -20,17 +22,18 @@ public class GroupCreationTests extends TestBase{
         return result;
     }
 
-    public static List<GroupData> singleRandomGroup(){
-        return List.of(new GroupData()
+    public static Stream<GroupData> randomGroups(){
+        Supplier<GroupData> randomGroup = () -> new GroupData()
                 .withName(CommonFunctions.randomString(10))
                 .withHeader(CommonFunctions.randomString(20))
-                .withFooter(CommonFunctions.randomString(30)));
+                .withFooter(CommonFunctions.randomString(30));
+        return Stream.generate(randomGroup).limit(1);
 
     }
 
     // Проверка создания групп с различными валидными данными
     @ParameterizedTest
-    @MethodSource("singleRandomGroup")
+    @MethodSource("randomGroups")
     public void canCreateGroup(GroupData group) {
         // получение списка групп из БД до создания
         var oldGroups = app.hbm().getGroupList();
@@ -38,21 +41,13 @@ public class GroupCreationTests extends TestBase{
         app.groups().createGroup(group);
         // получение списка групп из БД после создания
         var newGroups = app.hbm().getGroupList();
-        // безопасный компаратор для сортировки групп по ID
-        Comparator<GroupData> compareById = (o1, o2) -> {
-            if (o1.id().isEmpty() && o2.id().isEmpty()) return 0;
-            if (o1.id().isEmpty()) return -1;
-            if (o2.id().isEmpty()) return 1;
-            return Integer.compare(Integer.parseInt(o1.id()), Integer.parseInt(o2.id()));
-        };
-        newGroups.sort(compareById);
-
-        // формирование ожидаемого списка групп
+        var extraGroups = newGroups.stream().filter(g -> ! oldGroups.contains(g)).toList();
+        var newId = extraGroups.get(0).id();
         var expectedList = new ArrayList<>(oldGroups);
-        expectedList.add(group.withId(newGroups.get(newGroups.size() - 1).id()));
-        expectedList.sort(compareById);
+        expectedList.add(group.withId(newId));
+//        expectedList.sort(compareById);
         // сравнение списков групп из БД
-        Assertions.assertEquals(newGroups, expectedList);
+        Assertions.assertEquals(Set.copyOf(newGroups), Set.copyOf(expectedList));
     }
 
     // проверка невозможности создания группы с невалидными данными

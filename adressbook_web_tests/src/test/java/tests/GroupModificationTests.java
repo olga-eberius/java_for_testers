@@ -1,5 +1,6 @@
 package tests;
 
+import common.CommonFunctions;
 import model.GroupData;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -7,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Random;
+import java.util.Set;
 
 public class GroupModificationTests extends TestBase{
 
@@ -24,7 +26,7 @@ public class GroupModificationTests extends TestBase{
         var groupToModify = oldGroups.get(index);
 
         // создаем тестовые данные с новым именем группы
-        GroupData testData = new GroupData().withName("modified name");
+        GroupData testData = new GroupData().withName(CommonFunctions.randomString(10));
 
         // модифицируем выбранную группу через UI
         app.groups().modifyGroup(groupToModify, testData);
@@ -38,7 +40,7 @@ public class GroupModificationTests extends TestBase{
         // заменяем модифицированную группу в ожидаемом списке
         expectedList.set(index, testData.withId(oldGroups.get(index).id()));
 
-        // безопасный компаратор для сортировки по ID
+/*        // безопасный компаратор для сортировки по ID
         Comparator<GroupData> compareById = (o1, o2) -> {
             if (o1.id().isEmpty() && o2.id().isEmpty()) return 0;
             if (o1.id().isEmpty()) return -1;
@@ -48,9 +50,11 @@ public class GroupModificationTests extends TestBase{
 
         // сортируем актуальный и ожидаемый списки
         newGroups.sort(compareById);
-        expectedList.sort(compareById);
+        expectedList.sort(compareById);******/
+
+
 
         // проверяем, что списки из БД совпадают
-        Assertions.assertEquals(newGroups, expectedList);
+        Assertions.assertEquals(Set.copyOf(newGroups), Set.copyOf(expectedList));
     }
 }

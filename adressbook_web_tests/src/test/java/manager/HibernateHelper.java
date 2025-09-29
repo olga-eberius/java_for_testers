@@ -10,6 +10,7 @@ import org.hibernate.cfg.Configuration;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class HibernateHelper extends HelperBase {
 
@@ -30,11 +31,7 @@ public class HibernateHelper extends HelperBase {
 
     // преобразование списка записей из базы в список объектов группы
     static List<GroupData> convertGroupList(List<GroupRecord> records) {
-        List<GroupData> result = new ArrayList<>();
-        for (var record : records) {
-            result.add(convertGroup(record));
-        }
-        return result;
+        return records.stream().map(HibernateHelper::convertGroup).collect(Collectors.toList());
     }
 
     // преобразование одной записи группы из базы в объект группы
@@ -43,7 +40,7 @@ public class HibernateHelper extends HelperBase {
     }
 
     // преобразование объекта группы в запись для базы данных
-    private static GroupRecord convertGroup(GroupData data) {
+    private static GroupRecord convertToGroupRecord(GroupData data) {
         var id = data.id();
         if ("".equals(id)) {
             id = "0";
@@ -69,7 +66,7 @@ public class HibernateHelper extends HelperBase {
     public void createGroup(GroupData groupData) {
         sessionFactory.inSession(session -> {
             session.getTransaction().begin();
-            session.persist(convertGroup(groupData));
+            session.persist(convertToGroupRecord(groupData));
             session.getTransaction().commit();
         });
     }
@@ -78,15 +75,11 @@ public class HibernateHelper extends HelperBase {
 
     // преобразование списка записей контактов из базы в список объектов контактов
     static List<ContactData> convertContactList(List<ContactRecord> records) {
-        List<ContactData> result = new ArrayList<>();
-        for (var record : records) {
-            result.add(convertContact(record));
-        }
-        return result;
+        return records.stream().map(HibernateHelper::convertToContact).collect(Collectors.toList());
     }
 
     // преобразование одной записи контакта из базы в объект контакта
-    private static ContactData convertContact(ContactRecord record) {
+    private static ContactData convertToContact(ContactRecord record) {
         String id = record.id == 0 ? "" : String.valueOf(record.id);
         String firstName = record.firstName == null ? "" : record.firstName;
         String lastName = record.lastName == null ? "" : record.lastName;
@@ -118,7 +111,7 @@ public class HibernateHelper extends HelperBase {
     }
 
     // преобразование объекта контакта в запись для базы данных
-    private static ContactRecord convertContact(ContactData data) {
+    private static ContactRecord convertToContactRecord(ContactData data) {
         var id = data.id();
         if ("".equals(id)) {
             id = "0";
@@ -168,15 +161,14 @@ public class HibernateHelper extends HelperBase {
     public void createContact(ContactData contactData) {
         sessionFactory.inSession(session -> {
             session.getTransaction().begin();
-            session.persist(convertContact(contactData));
+            session.persist(convertToContactRecord(contactData));
             session.getTransaction().commit();
         });
     }
 
-   public List<ContactData> getContactsInGroup(GroupData group) {
+    public List<ContactData> getContactsInGroup(GroupData group) {
         return sessionFactory.fromSession(session -> {
-            return convertContactList(session.get(GroupRecord.class, group.id()).contacts);
+            return convertContactList(session.get(GroupRecord.class, Integer.parseInt(group.id())).contacts);
         });
     }
-
 }

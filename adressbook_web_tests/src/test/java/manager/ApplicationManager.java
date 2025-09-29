@@ -115,7 +115,7 @@ public class ApplicationManager {
                 .filter(c -> contactsInGroup.stream().noneMatch(gc -> gc.id().equals(c.id())))
                 .collect(Collectors.toList());
     }
-     
+
     public List<ContactData> getContactsInGroup(GroupData group) {
         return hbm().getContactsInGroup(group);
     }

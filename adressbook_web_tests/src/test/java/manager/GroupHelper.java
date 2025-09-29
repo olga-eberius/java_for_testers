@@ -2,11 +2,13 @@ package manager;
 
 import model.GroupData;
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class GroupHelper extends HelperBase{
 
@@ -115,34 +117,24 @@ public class GroupHelper extends HelperBase{
     }
 
     private void selectAllGroups() {
-        var checkboxes = manager.driver.findElements(By.name("selected[]"));
-        for (var checkbox: checkboxes) {
-            checkbox.click();
-        }
+        manager.driver
+                .findElements(By.name("selected[]"))
+                .forEach(WebElement::click);
     }
 
     public List<GroupData> getList() {
         // открываем страницу со списком групп
         openGroupsPage();
-        // создаем пустой список для хранения данных групп
-        var groups = new ArrayList<GroupData>();
         // находим все элементы, представляющие группы на странице
         var spans = manager.driver.findElements(By.cssSelector("span.group"));
-
-        // обрабатываем каждую найденную группу
-        for (var span : spans) {
-            var name = span.getText(); // получаем название группы из текста элемента
-            var checkbox = span.findElement(By.name("selected[]")); // находим чекбокс внутри элемента группы
-            var id = checkbox.getAttribute("value"); // получаем значение атрибута value, который содержит ID группы
-
-            // проверка что id не пустой - для отладки, тест падает
-            if (id != null && !id.isEmpty()) {
-                // создаем объект GroupData и добавляем его в список
-                groups.add(new GroupData().withId(id).withName(name));
-            }
-        }
-        // возвращаем список всех найденных групп
-        return groups;
+        return spans.stream()
+                .map(span -> {
+                    var name = span.getText(); // получаем название группы из текста элемента
+                    var checkbox = span.findElement(By.name("selected[]")); // находим чекбокс внутри элемента группы
+                    var id = checkbox.getAttribute("value"); // получаем значение атрибута value, который содержит ID группы
+                    return new GroupData().withId(id).withName(name);
+                })
+                .collect(Collectors.toList());
     }
 
 

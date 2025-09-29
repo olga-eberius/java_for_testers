@@ -4,12 +4,12 @@ import model.ContactData;
 import model.GroupData;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 
 public class ContactsHelper extends HelperBase {
@@ -284,6 +284,21 @@ public class ContactsHelper extends HelperBase {
         }
 
         returnToContactsPage();
+    }
+
+    public String getPhonesByName(ContactData contact) {
+        openContactsPage();
+
+        try {
+            // поиск по имени и фамилии в таблице
+            var xpath = String.format("//tr[td[2][text()='%s'] and td[3][text()='%s']]/td[6]",
+                    contact.lastName(), contact.firstName());
+            var element = manager.driver.findElement(By.xpath(xpath));
+            return element.getText();
+        } catch (NoSuchElementException e) {
+            System.out.println("телефоны не найдены для  " + contact.firstName() + " " + contact.lastName());
+            return "";
+        }
     }
 
 }
