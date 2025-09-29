@@ -286,7 +286,7 @@ public class ContactsHelper extends HelperBase {
         returnToContactsPage();
     }
 
-    public String getPhonesByName(ContactData contact) {
+    /*public String getPhonesByName(ContactData contact) {
         openContactsPage();
 
         try {
@@ -299,6 +299,41 @@ public class ContactsHelper extends HelperBase {
             System.out.println("телефоны не найдены для  " + contact.firstName() + " " + contact.lastName());
             return "";
         }
+    }*/
+
+    public Map<String, String> getPhones() {
+        var result = new HashMap<String, String>();
+        List<WebElement> rows = manager.driver.findElements(By.name("entry"));
+        for (WebElement row : rows) {
+            var id = row.findElement(By.tagName("input")).getAttribute("id");
+            var phones = row.findElements(By.tagName("td")).get(5).getText();
+            result.put(id, phones);
+        }
+        return result;
     }
+
+    public Map<String, String> getEmails() {
+        var result = new HashMap<String, String>();
+        List<WebElement> rows = manager.driver.findElements(By.name("entry"));
+        for (WebElement row : rows) {
+            var id = row.findElement(By.tagName("input")).getAttribute("value");
+            var emails = row.findElements(By.tagName("td")).get(4).getText(); // 5-я ячейка
+            result.put(id, emails);
+        }
+        return result;
+    }
+
+    public Map<String, String> getAddresses() {
+        var result = new HashMap<String, String>();
+        List<WebElement> rows = manager.driver.findElements(By.name("entry"));
+        for (WebElement row : rows) {
+            var id = row.findElement(By.tagName("input")).getAttribute("value");
+            var address = row.findElements(By.tagName("td")).get(3).getText(); // 4-я ячейка
+            result.put(id, address);
+        }
+        return result;
+    }
+
+
 
 }
