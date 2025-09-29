@@ -40,20 +40,6 @@ public class GroupModificationTests extends TestBase{
         // заменяем модифицированную группу в ожидаемом списке
         expectedList.set(index, testData.withId(oldGroups.get(index).id()));
 
-/*        // безопасный компаратор для сортировки по ID
-        Comparator<GroupData> compareById = (o1, o2) -> {
-            if (o1.id().isEmpty() && o2.id().isEmpty()) return 0;
-            if (o1.id().isEmpty()) return -1;
-            if (o2.id().isEmpty()) return 1;
-            return Integer.compare(Integer.parseInt(o1.id()), Integer.parseInt(o2.id()));
-        };
-
-        // сортируем актуальный и ожидаемый списки
-        newGroups.sort(compareById);
-        expectedList.sort(compareById);******/
-
-
-
         // проверяем, что списки из БД совпадают
         Assertions.assertEquals(Set.copyOf(newGroups), Set.copyOf(expectedList));
     }
