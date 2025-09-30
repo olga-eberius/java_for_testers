@@ -1,11 +1,17 @@
+package ru.stqa.mantis.manager;
+
 import okhttp3.*;
-import ru.stqa.mantis.manager.ApplicationManager;
 
 import java.io.IOException;
 import java.net.CookieManager;
 
 public class HttpSessionHelper extends HelperBase {
     OkHttpClient client;
+
+    public HttpSessionHelper(ApplicationManager manager) {
+        super(manager);
+        client = new OkHttpClient.Builder().cookieJar(new JavaNetCookieJar(new CookieManager())).build();
+    }
 
     public void login(String username, String password) {
         RequestBody formBody = new FormBody.Builder()

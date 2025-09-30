@@ -2,14 +2,13 @@ package ru.stqa.mantis.manager;
 
 import jakarta.mail.*;
 import ru.stqa.mantis.model.MailMessage;
-
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
-public class MailHelper extends HelperBase{
+public class MailHelper extends HelperBase {
     public MailHelper(ApplicationManager manager) {
         super(manager);
     }
